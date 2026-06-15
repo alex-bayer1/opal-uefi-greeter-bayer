@@ -11,14 +11,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install Older Rust toolchain
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: 1.65.0       # Фиксируем старую версию компилятора, чтобы не было ошибки 101
-        targets: x86_64-unknown-uefi
-
-    - name: Build project
-      run: cargo build --release --target x86_64-unknown-uefi
+    - name: Build inside official Rust container
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/volume -w /volume rust:1.65.0-slim-bullseye sh -c "
+          rustup target add x86_64-unknown-uefi &&
+          cargo build --release --target x86_64-unknown-uefi
+        "
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
