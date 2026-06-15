@@ -11,9 +11,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
+    - name: Install Older Rust toolchain
+      uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: 1.65.0       # Фиксируем старую версию компилятора, чтобы не было ошибки 101
         targets: x86_64-unknown-uefi
 
     - name: Build project
