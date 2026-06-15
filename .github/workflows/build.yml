@@ -1,7 +1,7 @@
-name: Build UEFI Greeter
+name: Fixed UEFI Greeter Build
 
 on:
-  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,14 +11,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build inside official Rust container
+    - name: Patch obsolete dependencies
       run: |
-        docker run --rm -v ${{ github.workspace }}:/volume -w /volume rust:1.65.0-slim-bullseye sh -c "
-          rustup target add x86_64-unknown-uefi &&
-          cargo build --release --target x86_64-unknown-uefi
-        "
+        # Исправляем старый манифест Cargo, принудительно заменяя версии ломающихся библиотек
+        sed -i 's/uefi = .*/uefi = "0.15.0"/' Cargo.toml || true
+        sed -i 's/uefi-services = .*/uefi-services = "0.11.0"/' Cargo.toml || true
 
-    - name: Upload Artifact
+    - name: Install Rust Toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: 1.68.0
+        targets: x86_64-unknown-uefi
+
+    - name: Build UEFI Application
+      run: cargo build --release --target x86_64-unknown-uefi
+
+    - name: Upload Finished EFI
       uses: actions/upload-artifact@v4
       with:
         name: opal-uefi-greeter-bin
